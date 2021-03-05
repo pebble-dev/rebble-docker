@@ -32,14 +32,20 @@ RUN /bin/bash -c " \
         deactivate " && \
     rm -r /root/.cache/
 
-#  disable analytics
-RUN chmod -R 777 /opt/${PEBBLE_TOOL_VERSION} && \
-    mkdir -p /home/.pebble-sdk/ && \
-    touch /home/.pebble-sdk/NO_TRACKING
+# disable analytics & add pebble user - necesary for Arch linux hosts
+RUN adduser --disabled-password --gecos "" --ingroup users pebble && \
+    echo "pebble ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    chmod -R 777 /opt/${PEBBLE_TOOL_VERSION} && \
+    mkdir -p /home/pebble/.pebble-sdk/ && \
+    chown -R pebble:users /home/pebble/.pebble-sdk && \
+    touch /home/pebble/.pebble-sdk/NO_TRACKING
+
+#switch user
+USER pebble
 
 #install nvm
 ENV NODE_VERSION 10.16.2
-ENV NVM_DIR /home/.nvm
+ENV NVM_DIR /home/pebble/.nvm
 RUN mkdir -p $NVM_DIR && \
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.0/install.sh | bash && \
     . $NVM_DIR/nvm.sh && \
@@ -54,5 +60,10 @@ RUN /bin/bash -c "arm-none-eabi-gcc -v"
 # install sdk
 RUN yes | pebble sdk install https://github.com/aveao/PebbleArchive/raw/master/SDKCores/sdk-core-${PEBBLE_SDK_VERSION}.tar.bz2 && \
     pebble sdk activate ${PEBBLE_SDK_VERSION}
-    
+
+# set mount path
+VOLUME /pebble/
+
+#run command
+WORKDIR /pebble/
 CMD /bin/bash
