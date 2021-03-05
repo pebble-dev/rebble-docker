@@ -27,3 +27,12 @@ We can proxy the display by setting environment variables and bind mounts.
         -e DISPLAY=$DISPLAY \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
         rebble/pebble-sdk
+
+On linux hosts that only allow access to the X server from valid user accounts
+(Arch linux, Manajaro, etc) you will need to add a link to xauthority.
+
+    docker run --name=RebbleSDK -it \
+        -e DISPLAY=$DISPLAY \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v ~/.Xauthority:/home/pebble/.Xauthority \
+        rebble/pebble-sdk
